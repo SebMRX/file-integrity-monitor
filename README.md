@@ -1,96 +1,33 @@
-# File Integrity Monitor (FIM)
+# File Integrity Monitor
 
-A security tool that detects unauthorized file modifications by maintaining SHA-256 hash baselines and comparing against current state.
+monitors directories for file changes by keeping sha256 hash baselines. if someone modifes, adds or deletes a file you'll know about it
 
-## Features
-
-- **SHA-256 hash-based** file integrity verification
-- **Real-time watch mode** with configurable intervals
-- **Change detection**: additions, deletions, modifications, permission changes
-- **Smart filtering**: monitors code and config files by default
-- **Baseline management**: create, check, update, and query baselines
-- **Color-coded alerts** for different severity levels
-- **Exit codes** for scripting integration (0 = clean, 1 = changes detected)
-
-## Installation
-
-```bash
-git clone https://github.com/SebMRX/file-integrity-monitor.git
-cd file-integrity-monitor
-```
-
-No external dependencies — uses only Python standard library.
-
-## Usage
-
-### Create a baseline
-```bash
-python fim.py init /var/www/html
-python fim.py init /etc --all    # Include all file types
-```
-
-### Check for changes
-```bash
-python fim.py check /var/www/html
-python fim.py check /var/www/html --verbose    # Show hash details
-python fim.py check /var/www/html --update     # Update baseline after check
-```
-
-### Real-time monitoring
-```bash
-python fim.py watch /var/www/html
-python fim.py watch /var/www/html --interval 30    # Check every 30 seconds
-```
-
-### View baseline info
-```bash
-python fim.py status /var/www/html
-```
-
-## Example Output
+## usage
 
 ```
-============================================================
-  FILE INTEGRITY CHECK RESULTS
-============================================================
+# create baseline first
+python fim.py init /path/to/monitor
 
-  Summary:
-    Unchanged : 142
-    Added     : 2
-    Removed   : 1
-    Modified  : 3
+# check for changes
+python fim.py check /path/to/monitor
 
-  [NEW FILES]
-    + uploads/shell.php  (1,337 bytes)
-    + tmp/backdoor.py  (4,521 bytes)
+# realtime monitoring (checks every 10sec)
+python fim.py watch /path/to/monitor
+python fim.py watch /path/to/monitor --interval 30
 
-  [REMOVED FILES]
-    - config/firewall.conf
-
-  [MODIFIED FILES]
-    ~ index.html  (+45 bytes)
-    ~ .htaccess  (+120 bytes)
-    ~ config/database.yml  (-8 bytes)
-
-============================================================
-  ⚠  ALERT: File integrity compromised!
+# see baseline info
+python fim.py status /path/to/monitor
 ```
 
-## Use Cases
+## what it detects
 
-- **Web server monitoring**: Detect defacement or webshell uploads
-- **Configuration auditing**: Track changes to system config files
-- **Malware detection**: Identify unauthorized binary modifications
-- **Compliance**: Meet file integrity monitoring requirements (PCI-DSS, HIPAA)
-- **Incident response**: Determine scope of compromise
+- new files added
+- files deleted
+- file content modified (hash comparison)
+- permission changes
 
-## How It Works
+usefull for monitoring web servers, config files, detecting malware etc
 
-1. **`init`** — Walks the target directory, computes SHA-256 hashes for all matching files, and stores the baseline in `~/.fim/`
-2. **`check`** — Rescans and compares against baseline, reporting any differences
-3. **`watch`** — Runs `check` in a loop at the specified interval
-4. **Exit code 1** when changes are detected — useful in CI/CD or cron jobs
+returns exit code 1 when changes found so you can use it in cron jobs
 
-## License
-
-MIT License
+no dependencies, just python3
